@@ -1,0 +1,1895 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gluco Smart — Decisiones inteligentes para una vida en equilibrio</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts: Inter & Playfair Display para el contraste tipográfico de "gluco" en serif cursiva y "smart." en sans bold -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        navy: {
+                            DEFAULT: '#0A194E',
+                            light: '#142B73',
+                            dark: '#060F33',
+                            accent: '#1E3A8A'
+                        },
+                        emerald: {
+                            brand: '#10B981'
+                        },
+                        cyan: {
+                            brand: '#06B6D4'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        serifItalic: ['Playfair Display', 'serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E2E8F0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .font-gluco {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-style: italic;
+        }
+        /* Ocultar scrollbars manteniendo funcionalidad */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        /* Animaciones suaves */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade {
+            animation: fadeIn 0.28s ease-out forwards;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
+            50% { box-shadow: 0 0 0 12px rgba(239, 68, 68, 0); }
+        }
+        .pulse-red {
+            animation: pulseGlow 2s infinite;
+        }
+        @keyframes scanLine {
+            0% { top: 8%; }
+            50% { top: 88%; }
+            100% { top: 8%; }
+        }
+        .scanner-laser {
+            position: absolute;
+            left: 6%;
+            width: 88%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #10B981, #06B6D4, transparent);
+            box-shadow: 0 0 12px #10B981;
+            animation: scanLine 2.2s ease-in-out infinite;
+        }
+        /* Transición del anillo SVG */
+        .ring-progress {
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start md:justify-center md:py-4 select-none">
+
+    <!-- BARRA DE CONTROL DEMO ESCOLAR (Visible arriba para facilitar la exposición frente al grupo) -->
+    <div class="w-full max-w-4xl bg-navy-dark text-white px-3 py-2 md:rounded-2xl mb-0 md:mb-3 shadow-md flex flex-wrap items-center justify-between gap-2 text-xs z-40">
+        <div class="flex items-center gap-2">
+            <span class="bg-emerald-500 text-navy-dark font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider text-[10px]">Modo Demo UNIVA</span>
+            <span class="hidden sm:inline text-blue-200">ODS 3: Salud y Bienestar | Prototipo Funcional MVP</span>
+        </div>
+        <div class="flex items-center flex-wrap gap-1.5">
+            <button onclick="openOnboarding()" class="bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg font-medium transition flex items-center gap-1">
+                <i class="fas fa-clipboard-question text-cyan-300"></i> Cuestionario Inicial
+            </button>
+            <button onclick="simulateHighGlucoseCrisis()" class="bg-red-500/90 hover:bg-red-600 text-white px-2.5 py-1 rounded-lg font-semibold transition flex items-center gap-1">
+                <i class="fas fa-bolt"></i> Simular Crisis (279 mg/dL)
+            </button>
+            <button onclick="toggleViewportMode()" id="viewport-btn" class="hidden md:flex bg-white/10 hover:bg-white/20 text-white px-2.5 py-1 rounded-lg font-medium transition items-center gap-1">
+                <i class="fas fa-expand-alt text-emerald-300"></i> <span id="viewport-label">Pantalla Completa</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- CONTENEDOR PRINCIPAL DE LA APP (Marco de Smartphone en Desktop o Pantalla Completa) -->
+    <div id="app-shell" class="w-full max-w-[430px] h-[100dvh] md:h-[850px] bg-[#F4F7FB] md:rounded-[42px] md:shadow-[0_25px_70px_rgba(10,25,78,0.35)] md:border-[8px] md:border-navy-dark flex flex-col overflow-hidden relative transition-all duration-300">
+
+        <!-- NOTIFICACIÓN EMERGENTE (TOAST / ALARMA DE MEDICAMENTO O UBICACIÓN) -->
+        <div id="app-toast" class="hidden absolute top-4 left-4 right-4 bg-navy-dark/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-cyan-400/30 z-50 flex items-start gap-3 animate-fade">
+            <div id="toast-icon" class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-lg mt-0.5">
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="flex-1 text-left">
+                <h4 id="toast-title" class="font-bold text-sm text-white">Notificación Gluco Smart</h4>
+                <p id="toast-desc" class="text-xs text-blue-100 mt-0.5 leading-snug">Mensaje de alerta.</p>
+            </div>
+            <button onclick="hideToast()" class="text-blue-200 hover:text-white p-1">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <!-- HEADER CORPORATIVO CON IMAGOTIPO REDISEÑADO -->
+        <header class="bg-navy text-white pt-4 pb-3.5 px-5 rounded-b-3xl shadow-md shrink-0 relative z-20">
+            <div class="flex items-center justify-between">
+                <!-- Logo Gluco Smart (Gota estilizada + pulso vital + anillo de equilibrio + tipografía dual) -->
+                <div class="flex items-center gap-2.5 cursor-pointer" onclick="switchTab('home')">
+                    <svg class="w-10 h-10 shrink-0" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Gota estilizada -->
+                        <path d="M32 6C32 6 14 26.5 14 40C14 49.9411 22.0589 58 32 58C41.9411 58 50 49.9411 50 40C50 26.5 32 6 32 6Z" stroke="url(#dropGrad)" stroke-width="4.5" fill="#0D2163"/>
+                        <!-- Pulso vital interior -->
+                        <path d="M19 39H26L29.5 30L34.5 46L38 39H45" stroke="#10B981" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                        <!-- Anillo de equilibrio -->
+                        <ellipse cx="32" cy="42" rx="26" ry="9" stroke="url(#ringGrad)" stroke-width="3.2" stroke-dasharray="115 45"/>
+                        <defs>
+                            <linearGradient id="dropGrad" x1="14" y1="6" x2="50" y2="58" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#06B6D4"/>
+                                <stop offset="1" stop-color="#10B981"/>
+                            </linearGradient>
+                            <linearGradient id="ringGrad" x1="6" y1="42" x2="58" y2="42" gradientUnits="userSpaceOnUse">
+                                <stop stop-color="#06B6D4"/>
+                                <stop offset="1" stop-color="#10B981"/>
+                            </linearGradient>
+                        </defs>
+                    </svg>
+                    <div class="leading-none">
+                        <div class="text-2xl tracking-tight flex items-baseline">
+                            <span class="font-gluco font-semibold text-cyan-300 mr-0.5">gluco</span>
+                            <span class="font-sans font-extrabold text-white">smart<span class="text-emerald-400">.</span></span>
+                        </div>
+                        <p class="text-[10px] text-blue-200 tracking-wide mt-0.5">Decisiones inteligentes en equilibrio</p>
+                    </div>
+                </div>
+
+                <!-- Botón de Perfil / Buyer Persona Activa -->
+                <button onclick="openOnboarding()" class="flex items-center gap-2 bg-white/10 hover:bg-white/20 border border-white/15 pl-2.5 pr-3 py-1.5 rounded-full transition" title="Cambiar perfil o repetir cuestionario">
+                    <div class="w-6 h-6 rounded-full bg-emerald-500 text-navy-dark font-bold text-xs flex items-center justify-center">
+                        <span id="profile-avatar-letter">E</span>
+                    </div>
+                    <div class="text-left">
+                        <p id="profile-name-badge" class="text-[11px] font-bold leading-none">Elena (45+)</p>
+                        <p id="profile-cond-badge" class="text-[9px] text-emerald-300 leading-none mt-0.5">Prediabetes</p>
+                    </div>
+                </button>
+            </div>
+        </header>
+
+        <!-- CONTENIDO PRINCIPAL NAVEGABLE -->
+        <main class="flex-1 overflow-y-auto no-scrollbar px-4 pt-4 pb-24 space-y-4 relative" id="main-scroll">
+
+            <!-- ==========================================
+                 PESTAÑA 1: INICIO ("TU DÍA EN EQUILIBRIO")
+                 ========================================== -->
+            <section id="view-home" class="space-y-4 animate-fade">
+                
+                <!-- Tarjeta Interactiva de Estado de Glucosa Actual -->
+                <div id="glucose-status-card" class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 relative overflow-hidden transition-all">
+                    <div id="glucose-top-bar" class="absolute top-0 left-0 right-0 h-1.5 bg-emerald-500"></div>
+                    <div class="flex items-center justify-between mt-1">
+                        <div class="flex items-center gap-3">
+                            <!-- Mini Score Circular 83/100 como en la imagen 11972 -->
+                            <div id="score-badge-ring" class="w-14 h-14 rounded-full border-4 border-emerald-500 flex flex-col items-center justify-center bg-emerald-50/50 shrink-0">
+                                <span id="balance-score-num" class="text-lg font-extrabold text-slate-800 leading-none">83</span>
+                                <span class="text-[9px] font-semibold text-slate-400">/100</span>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-1.5">
+                                    <span id="glucose-state-badge" class="bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                                        <i class="fas fa-check-circle text-[10px]"></i> Estable
+                                    </span>
+                                    <span class="text-xs text-orange-500 font-semibold flex items-center gap-0.5">
+                                        <i class="fas fa-fire"></i> Mejor que ayer
+                                    </span>
+                                </div>
+                                <p id="glucose-state-msg" class="text-xs text-slate-500 mt-1">Glucosa en nivel ideal ¡Buen trabajo!</p>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span id="current-glucose-val" class="text-2xl font-black text-navy">118</span>
+                            <span class="block text-[10px] font-semibold text-slate-400 uppercase">mg/dL</span>
+                        </div>
+                    </div>
+
+                    <!-- Control interactivo para cambiar la glucosa en vivo durante la exposición -->
+                    <div class="mt-3.5 pt-3 border-t border-slate-100">
+                        <div class="flex justify-between items-center text-[11px] font-semibold text-slate-600 mb-1.5">
+                            <span><i class="fas fa-sliders-h text-navy mr-1"></i> Simulador de Glucómetro en Vivo:</span>
+                            <span class="text-navy font-bold">Desliza para probar</span>
+                        </div>
+                        <input type="range" id="glucose-slider" min="65" max="300" value="118" 
+                            class="w-full accent-navy cursor-pointer h-2 bg-slate-200 rounded-lg"
+                            oninput="updateGlucoseLevel(this.value)">
+                        <div class="flex justify-between text-[10px] text-slate-400 font-medium mt-1">
+                            <span>70 (Baja)</span>
+                            <span class="text-emerald-600 font-semibold">90 - 140 (En Rango Ideal)</span>
+                            <span class="text-red-500 font-semibold">240+ (Activa Safe Mode)</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gráfico Circular: "Tu día en equilibrio" (Imagen 11970) -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                    <div class="text-center mb-2">
+                        <h2 class="text-lg font-extrabold text-slate-800">Tu día en equilibrio</h2>
+                        <p class="text-xs text-slate-500">Más estable que ayer • Monitoreo inteligente</p>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-2 my-2">
+                        <!-- Leyenda izquierda -->
+                        <div class="space-y-2 text-xs">
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-emerald-600 inline-block"></span>
+                                <div>
+                                    <p class="font-bold text-slate-700 leading-none">En rango</p>
+                                    <p class="text-emerald-600 font-extrabold text-xs" id="legend-inrange">72%</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-amber-400 inline-block"></span>
+                                <div>
+                                    <p class="font-bold text-slate-700 leading-none">Altas</p>
+                                    <p class="text-amber-500 font-extrabold text-xs" id="legend-high">20%</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-3 h-3 rounded-full bg-sky-400 inline-block"></span>
+                                <div>
+                                    <p class="font-bold text-slate-700 leading-none">Bajas</p>
+                                    <p class="text-sky-500 font-extrabold text-xs" id="legend-low">8%</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Dona SVG Central -->
+                        <div class="relative w-36 h-36 flex items-center justify-center">
+                            <svg class="w-full h-full" viewBox="0 0 120 120">
+                                <!-- Fondo -->
+                                <circle cx="60" cy="60" r="46" fill="none" stroke="#E2E8F0" stroke-width="14" />
+                                <!-- Segmento Bajas (Azul claro) -->
+                                <circle cx="60" cy="60" r="46" fill="none" stroke="#38BDF8" stroke-width="14" stroke-dasharray="289" stroke-dashoffset="0" class="ring-progress" />
+                                <!-- Segmento Altas (Amarillo) -->
+                                <circle cx="60" cy="60" r="46" fill="none" stroke="#FBBF24" stroke-width="14" stroke-dasharray="289" stroke-dashoffset="23" class="ring-progress" />
+                                <!-- Segmento En Rango (Verde Esmeralda) -->
+                                <circle id="main-donut-ring" cx="60" cy="60" r="46" fill="none" stroke="#059669" stroke-width="14" stroke-dasharray="289" stroke-dashoffset="81" stroke-linecap="round" class="ring-progress" />
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                                <span class="text-[10px] font-semibold text-slate-400">Tiempo en</span>
+                                <span id="donut-center-pct" class="text-2xl font-black text-slate-800 leading-tight">72%</span>
+                                <span class="text-[10px] font-bold text-emerald-600">rango ideal</span>
+                            </div>
+                        </div>
+
+                        <!-- Indicador derecho -->
+                        <div class="bg-slate-50 rounded-2xl p-2.5 text-center border border-slate-100">
+                            <p class="text-[10px] text-slate-400 font-semibold">Promedio 7d</p>
+                            <p class="text-sm font-extrabold text-navy mt-0.5">130 <span class="text-[9px] font-normal">mg/dL</span></p>
+                            <div class="my-1.5 border-t border-slate-200"></div>
+                            <p class="text-[10px] text-slate-400 font-semibold">HbA1c est.</p>
+                            <p class="text-sm font-extrabold text-emerald-600">6.5%</p>
+                        </div>
+                    </div>
+
+                    <!-- Mini gráfica semanal (Últimos 7 días) -->
+                    <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
+                        <div>
+                            <p class="text-xs font-bold text-slate-700">Tu progreso semanal</p>
+                            <p class="text-[11px] text-slate-400">Vas por buen camino • Últimos 7 días</p>
+                        </div>
+                        <svg class="w-32 h-10" viewBox="0 0 120 36" fill="none">
+                            <path d="M2 28 C15 25, 22 10, 32 22 C42 34, 52 16, 65 18 C78 20, 88 6, 98 19 C108 32, 114 12, 118 14" stroke="#0A194E" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                            <path d="M2 28 C15 25, 22 10, 32 22 C42 34, 52 16, 65 18 C78 20, 88 6, 98 19 C108 32, 114 12, 118 14 L118 36 L2 36 Z" fill="url(#sparkGrad)" opacity="0.25"/>
+                            <defs>
+                                <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="36" gradientUnits="userSpaceOnUse">
+                                    <stop stop-color="#10B981"/>
+                                    <stop offset="1" stop-color="#10B981" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Logros Desbloqueados y Reto de Hoy (Interactivos) -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                            <i class="fas fa-trophy text-amber-400"></i> Logros desbloqueados y Reto
+                        </h3>
+                        <span class="text-[11px] text-emerald-600 font-semibold">Toca para marcar</span>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50/40 cursor-pointer transition">
+                            <div class="flex items-center gap-2.5">
+                                <input type="checkbox" checked class="accent-emerald-600 w-4 h-4 rounded" onchange="updateAchievements()">
+                                <span class="font-medium text-slate-700">2 días seguidos en rango</span>
+                            </div>
+                            <span class="text-amber-500"><i class="fas fa-sun"></i> <i class="fas fa-moon text-indigo-400"></i></span>
+                        </label>
+                        <label class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 hover:bg-emerald-50/40 cursor-pointer transition">
+                            <div class="flex items-center gap-2.5">
+                                <input type="checkbox" checked class="accent-emerald-600 w-4 h-4 rounded" onchange="updateAchievements()">
+                                <span class="font-medium text-slate-700">Noche sin subida de azúcar</span>
+                            </div>
+                            <span class="text-emerald-500"><i class="fas fa-star"></i></span>
+                        </label>
+                        <label class="flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200/70 cursor-pointer transition">
+                            <div class="flex items-center gap-2.5">
+                                <input type="checkbox" checked class="accent-emerald-600 w-4 h-4 rounded" onchange="updateAchievements()">
+                                <div>
+                                    <span class="font-bold text-navy block">Reto de hoy:</span>
+                                    <span class="text-slate-600">Mantén estabilidad después de cenar</span>
+                                </div>
+                            </div>
+                            <span class="bg-emerald-500 text-white px-2 py-0.5 rounded-md text-[10px] font-bold">+15 pts</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Sección: Aprende sobre la diabetes y Lista de Supermercado (Imagen 11972) -->
+                <div class="space-y-3">
+                    <h3 class="font-extrabold text-sm text-slate-800 px-1">Aprende sobre la diabetes</h3>
+                    <div class="grid grid-cols-3 gap-2.5">
+                        <button onclick="openInfoModal('basics')" class="bg-sky-50 hover:bg-sky-100 border border-sky-200/70 p-3 rounded-2xl text-left transition flex flex-col justify-between h-28">
+                            <span class="font-extrabold text-xs text-navy leading-tight">Fundamentos de Diabetes</span>
+                            <div class="self-end w-9 h-9 rounded-xl bg-sky-500/15 text-sky-600 flex items-center justify-center text-lg">
+                                <i class="fas fa-droplet"></i>
+                            </div>
+                        </button>
+                        <button onclick="openInfoModal('nutritips')" class="bg-amber-50 hover:bg-amber-100 border border-amber-200/70 p-3 rounded-2xl text-left transition flex flex-col justify-between h-28">
+                            <span class="font-extrabold text-xs text-navy leading-tight">NutriTips y Fibra</span>
+                            <div class="self-end w-9 h-9 rounded-xl bg-amber-500/15 text-amber-600 flex items-center justify-center text-lg">
+                                <i class="fas fa-seedling"></i>
+                            </div>
+                        </button>
+                        <button onclick="openInfoModal('control')" class="bg-indigo-50 hover:bg-indigo-100 border border-indigo-200/70 p-3 rounded-2xl text-left transition flex flex-col justify-between h-28">
+                            <span class="font-extrabold text-xs text-navy leading-tight">Control del Azúcar</span>
+                            <div class="self-end w-9 h-9 rounded-xl bg-indigo-500/15 text-indigo-600 flex items-center justify-center text-lg">
+                                <i class="fas fa-chart-line"></i>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de Supermercado y Dónde Comer (Imagen 11972 adaptada a Zapopan / Internacional) -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-sm text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-shopping-basket text-emerald-600"></i> Lista de Supermercado
+                        </h3>
+                        <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Bajo Índice Glucémico</span>
+                    </div>
+
+                    <button onclick="openInfoModal('supermarket')" class="w-full bg-gradient-to-r from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 p-3.5 rounded-2xl flex items-center justify-between transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-lg shadow-sm">
+                                <i class="fas fa-check-double"></i>
+                            </div>
+                            <div class="text-left">
+                                <p class="font-extrabold text-sm text-emerald-950">Lista Saludable Gluco Smart</p>
+                                <p class="text-xs text-emerald-700">Básicos mexicanos: nopales, aguacate, panela, frijol y chía</p>
+                            </div>
+                        </div>
+                        <i class="fas fa-chevron-right text-emerald-700"></i>
+                    </button>
+
+                    <!-- Supermercados en México / Jalisco -->
+                    <div class="grid grid-cols-3 gap-2 pt-1 text-center">
+                        <button onclick="openInfoModal('super-walmart')" class="p-2.5 rounded-2xl bg-blue-50/70 hover:bg-blue-100/80 border border-blue-200/70 transition flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center mb-1 text-xs shadow-2xs">
+                                <i class="fas fa-cart-shopping"></i>
+                            </div>
+                            <p class="font-extrabold text-[11px] text-slate-800 leading-tight">Walmart / Aurrera</p>
+                            <span class="text-[9px] text-blue-700 font-semibold mt-0.5">Ver básicos →</span>
+                        </button>
+                        <button onclick="openInfoModal('super-soriana')" class="p-2.5 rounded-2xl bg-orange-50/70 hover:bg-orange-100/80 border border-orange-200/70 transition flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center mb-1 text-xs shadow-2xs">
+                                <i class="fas fa-store"></i>
+                            </div>
+                            <p class="font-extrabold text-[11px] text-slate-800 leading-tight">Soriana / Fresko</p>
+                            <span class="text-[9px] text-orange-700 font-semibold mt-0.5">Ver básicos →</span>
+                        </button>
+                        <button onclick="openInfoModal('super-tianguis')" class="p-2.5 rounded-2xl bg-emerald-50/70 hover:bg-emerald-100/80 border border-emerald-200/70 transition flex flex-col items-center">
+                            <div class="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center mb-1 text-xs shadow-2xs">
+                                <i class="fas fa-apple-whole"></i>
+                            </div>
+                            <p class="font-extrabold text-[11px] text-slate-800 leading-tight">Tianguis / Mercado</p>
+                            <span class="text-[9px] text-emerald-700 font-semibold mt-0.5">Frescos →</span>
+                        </button>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <h4 class="font-extrabold text-xs text-slate-700 mb-2 flex items-center gap-1.5">
+                            <i class="fas fa-utensils text-amber-500"></i> Dónde comer en Zapopan y qué pedir
+                        </h4>
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <button onclick="openInfoModal('rest-taqueria')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition">
+                                <div class="w-8 h-8 mx-auto rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mb-1">
+                                    <i class="fas fa-pepper-hot"></i>
+                                </div>
+                                <p class="font-bold text-[11px] text-slate-800 truncate">Taquería Local</p>
+                                <span class="text-[10px] text-emerald-600 font-semibold">Qué pedir →</span>
+                            </button>
+                            <button onclick="openInfoModal('rest-vips')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition">
+                                <div class="w-8 h-8 mx-auto rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mb-1">
+                                    <i class="fas fa-utensils"></i>
+                                </div>
+                                <p class="font-bold text-[11px] text-slate-800 truncate">Vips / Toks</p>
+                                <span class="text-[10px] text-amber-600 font-semibold">Qué pedir →</span>
+                            </button>
+                            <button onclick="openInfoModal('rest-fast')" class="p-2.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200/60 transition">
+                                <div class="w-8 h-8 mx-auto rounded-full bg-red-100 text-red-600 flex items-center justify-center mb-1">
+                                    <i class="fas fa-burger"></i>
+                                </div>
+                                <p class="font-bold text-[11px] text-slate-800 truncate">McDonald's</p>
+                                <span class="text-[10px] text-navy font-semibold">Qué pedir →</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 PESTAÑA 2: ESCÁNER VISUAL Y CÓDIGO DE BARRAS CON IA
+                 ========================================== -->
+            <section id="view-scanner" class="hidden space-y-4 animate-fade">
+                
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 text-center">
+                    <span class="text-[11px] font-extrabold uppercase tracking-wider text-emerald-700 bg-emerald-100 px-3 py-1 rounded-full">Escáner Preventivo IA • NOM-051</span>
+                    <h2 class="text-xl font-black text-slate-800 mt-2">Escanea <span class="text-emerald-600">antes de comprar</span>, no cuando ya comes</h2>
+                    <p class="text-xs text-slate-500 mt-1">Detecta azúcares ocultos y sellos de advertencia con una foto o prueba los productos mexicanos debajo.</p>
+
+                    <!-- Visor de Cámara / Escáner Simulado -->
+                    <div id="scanner-viewfinder" class="mt-4 relative bg-slate-900 rounded-3xl p-5 text-white overflow-hidden border-4 border-navy shadow-inner min-h-[210px] flex flex-col items-center justify-center">
+                        <div class="scanner-laser"></div>
+                        
+                        <!-- Esquinas del marco de escaneo -->
+                        <div class="w-48 h-32 border-2 border-white/60 rounded-2xl relative flex flex-col items-center justify-center p-3 bg-white/5 backdrop-blur-xs">
+                            <i class="fas fa-camera text-3xl text-cyan-300 mb-2"></i>
+                            <p class="text-xs font-semibold text-white">Captura el platillo o sellos NOM-051</p>
+                            <p class="text-[10px] text-blue-200 mt-0.5">Reconocimiento visual con Gemini IA</p>
+                        </div>
+
+                        <div class="mt-4 flex flex-wrap justify-center gap-2 z-10">
+                            <label for="real-camera-input" class="bg-emerald-500 hover:bg-emerald-600 text-navy-dark font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer shadow-lg transition flex items-center gap-1.5">
+                                <i class="fas fa-camera"></i> Abrir Cámara / Subir Foto
+                            </label>
+                            <input type="file" id="real-camera-input" accept="image/*" class="hidden" onchange="handleRealPhotoScan(event)">
+                        </div>
+                    </div>
+
+                    <!-- Buscador manual por texto con IA -->
+                    <div class="mt-3 flex gap-2">
+                        <input type="text" id="manual-food-input" placeholder="¿Problemas al escanear? Escribe un alimento (ej. Tamal, Chilaquiles, Gansito)..." 
+                            class="flex-1 bg-slate-100 border border-slate-200 rounded-xl px-3.5 py-2.5 text-xs focus:outline-none focus:border-navy">
+                        <button onclick="analyzeManualFood()" class="bg-navy hover:bg-navy-light text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shrink-0">
+                            Analizar IA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- BOTONES DE DEMOSTRACIÓN RÁPIDA CON PRODUCTOS MEXICANOS -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h3 class="text-xs font-extrabold text-navy uppercase tracking-wider flex items-center gap-1.5">
+                            <i class="fas fa-flask text-cyan-600"></i> Pruebas Rápidas (Productos en México):
+                        </h3>
+                        <span class="text-[10px] text-slate-400">Toca para simular escaneo</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-left">
+                        <button onclick="runPresetScan('chocomilk')" class="p-2.5 rounded-2xl border border-red-200 bg-red-50/60 hover:bg-red-100/80 transition flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center font-black text-xs shrink-0">1/10</div>
+                            <div class="overflow-hidden">
+                                <p class="font-extrabold text-xs text-slate-800 truncate">Choco Milk / Nesquik</p>
+                                <p class="text-[10px] text-red-600 font-semibold">2 Sellos • Alerta azúcar</p>
+                            </div>
+                        </button>
+                        <button onclick="runPresetScan('soda')" class="p-2.5 rounded-2xl border border-red-200 bg-red-50/60 hover:bg-red-100/80 transition flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-red-600 text-white flex items-center justify-center font-black text-xs shrink-0">1/10</div>
+                            <div class="overflow-hidden">
+                                <p class="font-extrabold text-xs text-slate-800 truncate">Coca-Cola Regular 600ml</p>
+                                <p class="text-[10px] text-red-600 font-semibold">63g azúcar • Pico crítico</p>
+                            </div>
+                        </button>
+                        <button onclick="runPresetScan('pan')" class="p-2.5 rounded-2xl border border-red-200 bg-red-50/40 hover:bg-red-100/60 transition flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-red-500 text-white flex items-center justify-center font-black text-xs shrink-0">2/10</div>
+                            <div class="overflow-hidden">
+                                <p class="font-extrabold text-xs text-slate-800 truncate">Concha / Pan Dulce</p>
+                                <p class="text-[10px] text-red-600 font-semibold">Harina refinada y azúcar</p>
+                            </div>
+                        </button>
+                        <button onclick="runPresetScan('tacosnopal')" class="p-2.5 rounded-2xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/80 transition flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0">9/10</div>
+                            <div class="overflow-hidden">
+                                <p class="font-extrabold text-xs text-slate-800 truncate">Tacos en Tortilla Nopal</p>
+                                <p class="text-[10px] text-emerald-700 font-semibold">Pollo/Asada + Aguacate</p>
+                            </div>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Indicador de Carga IA -->
+                <div id="scan-loading-box" class="hidden bg-white rounded-3xl p-6 text-center shadow-sm border border-slate-100">
+                    <div class="w-10 h-10 border-4 border-navy border-t-emerald-400 rounded-full animate-spin mx-auto mb-3"></div>
+                    <p class="font-bold text-sm text-navy">Analizando alimento con Inteligencia Artificial...</p>
+                    <p class="text-xs text-slate-400 mt-1">Verificando sellos NOM-051, carga glucémica y fibra</p>
+                </div>
+
+                <!-- TARJETA DE RESULTADO DEL ESCÁNER (Localizada a México con sellos NOM-051) -->
+                <div id="scan-result-card" class="bg-white rounded-3xl p-5 shadow-md border-2 border-red-500 animate-fade">
+                    <div class="flex items-start justify-between gap-3 mb-2.5">
+                        <div>
+                            <span id="scan-category-tag" class="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-100 text-red-700">Resultado del Escaneo</span>
+                            <h3 id="scan-food-title" class="text-lg font-black text-slate-800 mt-1">CHOCO MILK / NESQUIK EN POLVO</h3>
+                        </div>
+                        <img id="scan-food-thumb" src="" alt="Foto" class="hidden w-14 h-14 rounded-2xl object-cover border border-slate-200">
+                    </div>
+
+                    <!-- Sellos de Advertencia NOM-051 México -->
+                    <div id="nom-seals-container" class="flex flex-wrap gap-1.5 mb-3">
+                        <span class="bg-slate-950 text-white text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border border-slate-600 tracking-wider">⬢ EXCESO CALORÍAS</span>
+                        <span class="bg-slate-950 text-white text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border border-slate-600 tracking-wider">⬢ EXCESO AZÚCARES</span>
+                    </div>
+
+                    <!-- Barra de Puntuación -->
+                    <div id="scan-score-bar" class="w-full bg-red-600 text-white font-black text-lg py-2 px-4 rounded-xl text-center shadow-sm mb-2.5">
+                        1/10
+                    </div>
+
+                    <div class="flex items-center gap-2 mb-3">
+                        <i id="scan-alert-icon" class="fas fa-triangle-exclamation text-red-600 text-lg"></i>
+                        <span id="scan-alert-headline" class="font-extrabold text-sm text-red-700">Alerta en azúcar • Eleva rápido tu glucosa</span>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 mb-3 text-xs">
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 block text-[10px] font-semibold">Carbohidratos / Azúcar</span>
+                            <span id="scan-carbs-val" class="font-extrabold text-slate-800">75g de azúcar por 100g (Muy Alto)</span>
+                        </div>
+                        <div class="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                            <span class="text-slate-400 block text-[10px] font-semibold">Índice Glucémico</span>
+                            <span id="scan-gi-val" class="font-extrabold text-red-600">Alto (85 IG)</span>
+                        </div>
+                    </div>
+
+                    <div id="scan-advice-box" class="bg-red-50 border border-red-200 rounded-2xl p-3.5 text-xs text-red-950 leading-relaxed">
+                        <strong><i class="fas fa-user-doctor mr-1"></i> Recomendación Gluco Smart:</strong>
+                        <span id="scan-advice-text">Evita su consumo habitual. Dos cucharadas aportan casi 20g de azúcar libre que dispara la glucosa en menos de 20 minutos. Alternativa mexicana segura: Cacao natural 100% sin azúcar con leche de almendras o canela.</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 PESTAÑA 3: PLAN PERSONALIZADO Y MEDICAMENTOS
+                 ========================================== -->
+            <section id="view-plan" class="hidden space-y-4 animate-fade">
+                
+                <!-- SUBSECCIÓN A: Recordatorios de Medicamentos -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100">
+                    <div class="flex items-center justify-between mb-3">
+                        <div>
+                            <h2 class="text-base font-extrabold text-slate-800 flex items-center gap-2">
+                                <i class="fas fa-pills text-navy"></i> Recordatorios de Medicamentos
+                            </h2>
+                            <p class="text-xs text-slate-500" id="meds-progress-text">2 de 3 tomas completadas hoy</p>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="simulatePillAlarm()" class="bg-amber-100 hover:bg-amber-200 text-amber-800 text-xs font-bold px-2.5 py-2 rounded-xl transition flex items-center gap-1" title="Probar cómo suena la alerta frente a la clase">
+                                <i class="fas fa-bell"></i> Simular Alarma
+                            </button>
+                            <button onclick="toggleNewMedForm()" class="bg-navy hover:bg-navy-light text-white text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1">
+                                <i class="fas fa-plus"></i> Agregar
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Formulario desplegable para agregar nuevo medicamento -->
+                    <div id="new-med-form" class="hidden mb-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                        <p class="text-xs font-bold text-navy">Nuevo recordatorio de tratamiento</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <input type="text" id="input-med-name" placeholder="Ej. Metformina 850mg" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                            <input type="time" id="input-med-time" value="14:00" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                        </div>
+                        <input type="text" id="input-med-note" placeholder="Indicaciones (ej. Tomar junto con la comida)" class="w-full bg-white border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="toggleNewMedForm()" class="text-xs text-slate-500 px-3 py-1.5">Cancelar</button>
+                            <button onclick="saveNewMedication()" class="bg-emerald-600 text-white text-xs font-bold px-4 py-1.5 rounded-xl">Guardar Recordatorio</button>
+                        </div>
+                    </div>
+
+                    <!-- Lista interactiva de medicamentos -->
+                    <div id="meds-container" class="space-y-2.5">
+                        <!-- Renderizado dinámicamente por JS -->
+                    </div>
+                </div>
+
+                <!-- SUBSECCIÓN B: Plan Nutricional Personalizado con IA -->
+                <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-100 space-y-4">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <span class="text-[10px] font-extrabold uppercase tracking-wider bg-blue-100 text-navy px-2.5 py-0.5 rounded-full">Inteligencia Nutricional</span>
+                            <h2 class="text-base font-extrabold text-slate-800 mt-1">Plan Personalizado Gluco Smart</h2>
+                            <p class="text-xs text-slate-500">Adaptado a tu cuestionario y preferencias en México</p>
+                        </div>
+                        <i class="fas fa-bowl-food text-2xl text-emerald-500"></i>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2.5 text-xs">
+                        <div>
+                            <label class="font-bold text-slate-600 block mb-1">Condición actual</label>
+                            <select id="plan-cond-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-800">
+                                <option value="Prediabetes / Resistencia a la insulina">Prediabetes (Perfil Elena)</option>
+                                <option value="Diabetes Tipo 2">Diabetes Tipo 2</option>
+                                <option value="Diabetes Gestacional">Diabetes Gestacional</option>
+                                <option value="Diabetes Tipo 1">Diabetes Tipo 1</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="font-bold text-slate-600 block mb-1">Meta principal</label>
+                            <select id="plan-goal-select" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 font-medium text-slate-800">
+                                <option value="Evitar picos de glucosa después de comer">Evitar picos posprandiales</option>
+                                <option value="Bajar niveles en ayunas y control de peso">Control en ayunas y peso</option>
+                                <option value="Menú económico familiar mexicano">Menú familiar económico</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="font-bold text-xs text-slate-600 block mb-1">Alergias o ingredientes a evitar (opcional)</label>
+                        <input type="text" id="plan-allergy-input" placeholder="Ej. Sin lácteos, económico, ingredientes fáciles..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs">
+                    </div>
+
+                    <button onclick="generateCustomPlanWithAI()" class="w-full bg-navy hover:bg-navy-light text-white font-bold py-3 rounded-2xl shadow-md transition flex items-center justify-center gap-2 text-xs">
+                        <i class="fas fa-wand-magic-sparkles text-emerald-300"></i> Actualizar Plan Personalizado con IA
+                    </button>
+
+                    <!-- Loader del Plan -->
+                    <div id="plan-loading-spinner" class="hidden py-6 text-center">
+                        <div class="w-8 h-8 border-4 border-navy border-t-emerald-400 rounded-full animate-spin mx-auto mb-2"></div>
+                        <p class="text-xs font-bold text-navy">Diseñando menú de bajo índice glucémico...</p>
+                    </div>
+
+                    <!-- Tarjetas del Menú Diario -->
+                    <div id="plan-cards-output" class="space-y-2.5 pt-1">
+                        <div class="p-3.5 rounded-2xl bg-amber-50/60 border border-amber-200/70">
+                            <p class="text-xs font-extrabold text-amber-900 flex items-center gap-1.5">
+                                <i class="fas fa-mug-hot text-amber-600"></i> Desayuno (08:30 AM) • Carga Glucémica Baja
+                            </p>
+                            <p id="menu-breakfast" class="text-xs text-slate-700 mt-1 leading-relaxed">Huevos revueltos con nopales asados y pico de gallo, 1 tortilla de maíz nixtamalizado, 1/4 de aguacate y té o café sin azúcar.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-emerald-50/60 border border-emerald-200/70">
+                            <p class="text-xs font-extrabold text-emerald-900 flex items-center gap-1.5">
+                                <i class="fas fa-sun text-emerald-600"></i> Comida (02:30 PM) • Plato del Bien Comer Diabético
+                            </p>
+                            <p id="menu-lunch" class="text-xs text-slate-700 mt-1 leading-relaxed">Pechuga de pollo a la plancha (150g) sobre cama de espinacas, pepino y jitomate. Guarnición de media taza de lentejas o frijoles de la olla (sin freír).</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-indigo-50/60 border border-indigo-200/70">
+                            <p class="text-xs font-extrabold text-indigo-900 flex items-center gap-1.5">
+                                <i class="fas fa-moon text-indigo-600"></i> Cena (08:00 PM) • Estabilidad Nocturna
+                            </p>
+                            <p id="menu-dinner" class="text-xs text-slate-700 mt-1 leading-relaxed">Filete de pescado blanco o queso panela asado con calabacitas salteadas y champiñones. Evitar harinas por la noche.</p>
+                        </div>
+                        <div class="p-3.5 rounded-2xl bg-sky-50/60 border border-sky-200/70 flex items-start justify-between gap-2">
+                            <div>
+                                <p class="text-xs font-extrabold text-sky-900 flex items-center gap-1.5">
+                                    <i class="fas fa-apple-whole text-sky-600"></i> Colación e Hidratación
+                                </p>
+                                <p id="menu-snack" class="text-xs text-slate-700 mt-1 leading-relaxed">10 almendras naturales + 1 manzana verde pequeña con cáscara. Meta: 2.2 litros de agua natural hoy.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ==========================================
+                 PESTAÑA 4: SAFE MODE - MODO DE EMERGENCIA (Imagen 11964 exacta)
+                 ========================================== -->
+            <section id="view-safemode" class="hidden space-y-4 animate-fade">
+                
+                <!-- Encabezado Escudo Safe Mode -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-red-100 flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white flex items-center justify-center text-3xl shadow-md pulse-red shrink-0">
+                        <i class="fas fa-shield-heart"></i>
+                    </div>
+                    <div>
+                        <h2 class="text-xl font-black text-navy leading-tight">Safe Mode</h2>
+                        <p class="text-xs font-semibold text-slate-500">Modo de emergencia activo • Protocolo Familiar</p>
+                    </div>
+                </div>
+
+                <!-- Alerta de Nivel de Glucosa Alto (279 mg/dL ↑ como en Imagen 11964) -->
+                <div class="bg-gradient-to-r from-red-50 via-rose-50 to-white rounded-3xl p-4 shadow-sm border-2 border-red-300 flex items-center justify-between">
+                    <div>
+                        <div class="flex items-center gap-1.5 text-red-700 font-extrabold text-xs">
+                            <i class="fas fa-triangle-exclamation"></i>
+                            <span>Nivel de glucosa alto</span>
+                        </div>
+                        <div class="flex items-baseline gap-1 my-1">
+                            <span id="safemode-glucose-number" class="text-4xl font-black text-red-600">279</span>
+                            <span class="text-sm font-bold text-slate-700">mg/dL</span>
+                            <i class="fas fa-arrow-up text-red-600 text-xl ml-1 animate-bounce"></i>
+                        </div>
+                        <span class="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-100 px-2.5 py-0.5 rounded-full">
+                            <i class="fas fa-heart-pulse"></i> Necesita atención
+                        </span>
+                    </div>
+
+                    <!-- Medidor semicircular (Gauge) con gota roja -->
+                    <div class="relative w-24 h-24 flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 100 100">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#E2E8F0" stroke-width="10" stroke-dasharray="190 70" stroke-dashoffset="-35" />
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#EF4444" stroke-width="10" stroke-dasharray="145 120" stroke-dashoffset="-35" stroke-linecap="round" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <i class="fas fa-droplet text-red-600 text-2xl"></i>
+                            <span class="text-[9px] font-bold text-slate-400 mt-0.5">&gt;240</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones recomendadas interactivas -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-2.5">
+                    <h3 class="font-extrabold text-xs text-slate-800 uppercase tracking-wider">Acciones recomendadas:</h3>
+                    
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200/60 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center text-base">
+                                <i class="fas fa-syringe"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">Aplica insulina o medicación</p>
+                                <p class="text-[11px] text-slate-500">Según pauta médica prescrita</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" checked class="w-5 h-5 accent-blue-600 rounded-full">
+                    </label>
+
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200/60 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-red-100 text-red-600 flex items-center justify-center text-base">
+                                <i class="fas fa-ban"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">Evita comer carbohidratos</p>
+                                <p class="text-[11px] text-slate-500">No ingieras azúcares ni harinas ahora</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" checked class="w-5 h-5 accent-blue-600 rounded-full">
+                    </label>
+
+                    <label class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-blue-50/50 cursor-pointer border border-slate-200/60 transition">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-base">
+                                <i class="fas fa-couch"></i>
+                            </div>
+                            <div>
+                                <p class="font-bold text-xs text-slate-800">Descansa y evita esfuerzos</p>
+                                <p class="text-[11px] text-slate-500">Permanece sentado y acompañado</p>
+                            </div>
+                        </div>
+                        <input type="checkbox" checked class="w-5 h-5 accent-blue-600 rounded-full">
+                    </label>
+                </div>
+
+                <!-- Contactar a alguien (Llamada Real y WhatsApp Real con GPS en Zapopan) -->
+                <div class="bg-white rounded-3xl p-4 shadow-sm border border-slate-100 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-extrabold text-xs text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-user-shield text-navy"></i> Contactar a alguien de inmediato
+                        </h3>
+                        <span class="text-[10px] text-slate-400">Lada Guadalajara/Zapopan (+52 33)</span>
+                    </div>
+
+                    <!-- Contacto 1: Mamá / Familiar -->
+                    <div class="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/70">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-full bg-rose-100 text-rose-700 font-bold flex items-center justify-center text-sm">
+                                M
+                            </div>
+                            <div>
+                                <p class="font-extrabold text-xs text-slate-800">Mamá</p>
+                                <input type="tel" id="emergency-phone-1" value="+52 33 1234 5678" class="text-[11px] text-slate-500 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-navy w-36">
+                            </div>
+                        </div>
+                        <button onclick="callEmergencyContact()" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                            <i class="fas fa-phone"></i> Llamar
+                        </button>
+                    </div>
+
+                    <!-- Contacto 2: Carlos (Hermano) -> WhatsApp Real -->
+                    <div class="flex items-center justify-between p-2.5 rounded-2xl bg-slate-50 border border-slate-200/70">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center text-sm">
+                                C
+                            </div>
+                            <div>
+                                <p class="font-extrabold text-xs text-slate-800">Carlos (Hermano)</p>
+                                <input type="tel" id="emergency-phone-2" value="+52 33 8765 4321" class="text-[11px] text-slate-500 bg-transparent border-b border-dashed border-slate-300 focus:outline-none focus:border-navy w-36">
+                            </div>
+                        </div>
+                        <button onclick="sendWhatsAppEmergency()" class="bg-[#10B981] hover:bg-[#059669] text-white font-bold text-xs px-4 py-2.5 rounded-full shadow-sm flex items-center gap-1.5 transition active:scale-95">
+                            <i class="fab fa-whatsapp text-sm"></i> WhatsApp
+                        </button>
+                    </div>
+
+                    <!-- Botón Enviar Ubicación GPS -->
+                    <button onclick="shareLiveLocationZapopan()" class="w-full bg-blue-50 hover:bg-blue-100 text-navy font-bold text-xs py-2.5 px-4 rounded-2xl border border-blue-200 flex items-center justify-center gap-2 transition">
+                        <i class="fas fa-location-dot text-blue-600"></i>
+                        <span id="gps-btn-text">Enviar mi ubicación actual (Zapopan, Jal.)</span>
+                    </button>
+                </div>
+
+                <!-- Consejos rápidos (Bebe agua, Relájate, Mide de nuevo - Imagen 11964) -->
+                <div class="space-y-2">
+                    <h3 class="font-extrabold text-xs text-slate-700 px-1">Consejos rápidos</h3>
+                    <div class="grid grid-cols-3 gap-2.5 text-center">
+                        <div class="bg-white p-3 rounded-2xl shadow-xs border border-slate-100">
+                            <div class="w-10 h-10 mx-auto rounded-xl bg-sky-100 text-sky-600 flex items-center justify-center text-lg mb-1.5">
+                                <i class="fas fa-glass-water"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-800">Bebe agua</p>
+                            <p class="text-[10px] text-slate-400">2 vasos naturales</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl shadow-xs border border-slate-100">
+                            <div class="w-10 h-10 mx-auto rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-lg mb-1.5">
+                                <i class="fas fa-wind"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-800">Relájate</p>
+                            <p class="text-[10px] text-slate-400">Respira profundo</p>
+                        </div>
+                        <div class="bg-white p-3 rounded-2xl shadow-xs border border-slate-100">
+                            <div class="w-10 h-10 mx-auto rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg mb-1.5">
+                                <i class="fas fa-stopwatch"></i>
+                            </div>
+                            <p class="font-bold text-xs text-slate-800">Mide de nuevo</p>
+                            <p class="text-[10px] text-slate-400">En 15-30 min</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="deactivateSafeMode()" class="w-full bg-navy hover:bg-navy-light text-white font-bold py-3.5 rounded-2xl shadow-md text-sm transition">
+                    Desactivar Safe Mode y volver a Balance
+                </button>
+            </section>
+
+        </main>
+
+        <!-- BOTÓN FLOTANTE ASISTENTE IA 24/7 (NutriBot) -->
+        <button onclick="toggleChatDrawer()" class="absolute bottom-20 right-4 bg-navy hover:bg-navy-light text-white px-3.5 py-2.5 rounded-full shadow-xl border-2 border-emerald-400 flex items-center gap-2 z-30 transition transform active:scale-95">
+            <div class="relative">
+                <i class="fas fa-robot text-lg text-emerald-300"></i>
+                <span class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full animate-ping"></span>
+            </div>
+            <span class="text-xs font-extrabold pr-0.5">Asistente IA 24h</span>
+        </button>
+
+        <!-- BARRA DE NAVEGACIÓN INFERIOR (4 SECCIONES PRINCIPALES) -->
+        <nav class="bg-white border-t border-slate-200 px-2 py-1.5 flex justify-around items-center shrink-0 z-30">
+            <button onclick="switchTab('home')" id="nav-btn-home" class="flex-1 py-1.5 flex flex-col items-center text-navy font-bold transition">
+                <i class="fas fa-chart-pie text-lg mb-0.5"></i>
+                <span class="text-[10px]">Equilibrio</span>
+            </button>
+            <button onclick="switchTab('scanner')" id="nav-btn-scanner" class="flex-1 py-1.5 flex flex-col items-center text-slate-400 font-medium transition">
+                <i class="fas fa-camera text-lg mb-0.5"></i>
+                <span class="text-[10px]">Escáner IA</span>
+            </button>
+            <button onclick="switchTab('plan')" id="nav-btn-plan" class="flex-1 py-1.5 flex flex-col items-center text-slate-400 font-medium transition">
+                <i class="fas fa-pills text-lg mb-0.5"></i>
+                <span class="text-[10px]">Plan y Pastillas</span>
+            </button>
+            <button onclick="switchTab('safemode')" id="nav-btn-safemode" class="flex-1 py-1.5 flex flex-col items-center text-slate-400 font-medium transition">
+                <i class="fas fa-shield-heart text-lg mb-0.5"></i>
+                <span class="text-[10px]">Safe Mode</span>
+            </button>
+        </nav>
+
+        <!-- ==========================================
+             MODAL 1: FLUJO DE CUESTIONARIO Y TÉRMINOS (Imágenes 11966, 11967, 11968)
+             ========================================== -->
+        <div id="onboarding-modal" class="hidden absolute inset-0 bg-white z-50 flex flex-col justify-between p-6 overflow-y-auto animate-fade">
+            <!-- Cabecera del Onboarding -->
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <button onclick="prevOnboardingStep()" id="onb-back-btn" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                        <i class="fas fa-arrow-left text-xs"></i>
+                    </button>
+                    <div class="bg-navy text-white px-3.5 py-1 rounded-full text-sm">
+                        <span class="font-gluco text-cyan-300">gluco</span><span class="font-extrabold">smart.</span>
+                    </div>
+                    <button onclick="closeOnboarding()" class="text-xs text-slate-400 hover:text-slate-600 font-semibold">Omitir</button>
+                </div>
+                <!-- Barra de progreso -->
+                <div class="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden mb-6">
+                    <div id="onb-progress-bar" class="h-full bg-navy transition-all duration-300" style="width: 25%"></div>
+                </div>
+
+                <!-- PASO 1: Aceptación de términos médicos (Imagen 11968) -->
+                <div id="onb-step-1" class="space-y-4 text-center px-1">
+                    <div class="w-14 h-14 rounded-2xl bg-blue-50 text-navy flex items-center justify-center text-2xl mx-auto">
+                        <i class="fas fa-notes-medical"></i>
+                    </div>
+                    <h2 class="text-xl font-extrabold text-slate-900">Por favor, confirma tu aceptación</h2>
+                    <p class="text-xs text-slate-600 leading-relaxed text-justify bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        Esta aplicación no es un servicio médico ni ofrece asesoramiento, diagnóstico ni tratamiento sanitario. <strong>Gluco Smart</strong> es una herramienta digital de apoyo diseñada para ayudarte a registrar y comprender datos relacionados con tu glucosa y tus hábitos diarios (alineada al <strong>ODS 3: Salud y Bienestar</strong>). La información que proporciona tiene fines educativos y orientativos, y no sustituye la evaluación ni las recomendaciones de un profesional de la salud.
+                    </p>
+                    <p class="text-xs font-extrabold text-slate-800 pt-1">Al continuar, reconoces y aceptas estos términos.</p>
+                </div>
+
+                <!-- PASO 2: ¿Qué edad tienes? (Imagen 11967 + Rango Elena Gómez) -->
+                <div id="onb-step-2" class="hidden space-y-3 text-center">
+                    <h2 class="text-xl font-extrabold text-slate-900 mb-4">¿Qué edad tienes?</h2>
+                    <div class="space-y-2.5" id="age-options">
+                        <button onclick="selectOnbAge('16-19 años')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3 rounded-2xl text-sm transition">16 - 19</button>
+                        <button onclick="selectOnbAge('20-25 años')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3 rounded-2xl text-sm transition">20 - 25</button>
+                        <button onclick="selectOnbAge('26-44 años')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3 rounded-2xl text-sm transition">26 - 44</button>
+                        <button onclick="selectOnbAge('Elena (45+)')" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3.5 rounded-2xl text-sm shadow-md transition flex items-center justify-center gap-2">
+                            <span>45 años o más (Perfil Elena Gómez)</span>
+                            <i class="fas fa-star text-amber-300 text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- PASO 3: ¿Con qué género te identificas? (Imagen 11966) -->
+                <div id="onb-step-3" class="hidden space-y-3 text-center">
+                    <h2 class="text-xl font-extrabold text-slate-900 mb-4">¿Con qué género te identificas?</h2>
+                    <div class="space-y-3">
+                        <button onclick="selectOnbGender('Femenino')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 rounded-2xl text-sm transition">femenino</button>
+                        <button onclick="selectOnbGender('Masculino')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 rounded-2xl text-sm transition">masculino</button>
+                        <button onclick="selectOnbGender('Prefiero no decirlo')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 rounded-2xl text-sm transition">prefiero no decirlo</button>
+                    </div>
+                </div>
+
+                <!-- PASO 4: Perfil de Glucosa para personalizar el Plan -->
+                <div id="onb-step-4" class="hidden space-y-3 text-center">
+                    <h2 class="text-xl font-extrabold text-slate-900 mb-2">¿Cuál es tu situación actual?</h2>
+                    <p class="text-xs text-slate-500 mb-4">Con esto crearemos tu plan nutricional y alertas a medida</p>
+                    <div class="space-y-2.5">
+                        <button onclick="selectOnbCondition('Prediabetes')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 px-4 rounded-2xl text-sm transition text-left flex justify-between items-center">
+                            <span>Prediabetes / Glucosa alta ocasional</span>
+                            <i class="fas fa-chevron-right text-cyan-300"></i>
+                        </button>
+                        <button onclick="selectOnbCondition('Diabetes Tipo 2')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 px-4 rounded-2xl text-sm transition text-left flex justify-between items-center">
+                            <span>Diabetes Tipo 2</span>
+                            <i class="fas fa-chevron-right text-cyan-300"></i>
+                        </button>
+                        <button onclick="selectOnbCondition('Diabetes Tipo 1')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 px-4 rounded-2xl text-sm transition text-left flex justify-between items-center">
+                            <span>Diabetes Tipo 1</span>
+                            <i class="fas fa-chevron-right text-cyan-300"></i>
+                        </button>
+                        <button onclick="selectOnbCondition('Cuidador Familiar')" class="w-full bg-navy hover:bg-navy-light text-white font-semibold py-3.5 px-4 rounded-2xl text-sm transition text-left flex justify-between items-center">
+                            <span>Cuido a un familiar con diabetes</span>
+                            <i class="fas fa-chevron-right text-cyan-300"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón Inferior Continuar -->
+            <button onclick="nextOnboardingStep()" id="onb-continue-btn" class="w-full bg-navy hover:bg-navy-light text-white font-bold py-4 rounded-2xl text-base shadow-lg transition">
+                Continuar
+            </button>
+        </div>
+
+        <!-- ==========================================
+             MODAL 2: ASISTENTE IA 24/7 (NutriBot Drawer)
+             ========================================== -->
+        <div id="chat-drawer" class="hidden absolute inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex flex-col justify-end animate-fade">
+            <div class="bg-white w-full h-[82%] rounded-t-3xl flex flex-col overflow-hidden shadow-2xl">
+                <!-- Cabecera Chat -->
+                <div class="bg-navy text-white p-4 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-9 h-9 rounded-full bg-emerald-500/20 border border-emerald-400 flex items-center justify-center text-emerald-300">
+                            <i class="fas fa-robot"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-sm">Asistente IA Gluco Smart 24/7</h3>
+                            <p class="text-[10px] text-emerald-300 flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span> En línea • Especialista en Diabetes
+                            </p>
+                        </div>
+                    </div>
+                    <button onclick="toggleChatDrawer()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- Sugerencias rápidas -->
+                <div class="bg-slate-50 px-3 py-2 border-b border-slate-200 flex gap-1.5 overflow-x-auto no-scrollbar shrink-0">
+                    <button onclick="askQuickQuestion('¿Puedo comer manzana o plátano en la noche?')" class="bg-white border border-slate-200 text-navy text-[11px] font-semibold px-3 py-1 rounded-full shrink-0 hover:bg-blue-50">
+                        🍎 ¿Fruta en la noche?
+                    </button>
+                    <button onclick="askQuickQuestion('¿Qué hago si mi glucosa subió a 250 mg/dL?')" class="bg-white border border-slate-200 text-navy text-[11px] font-semibold px-3 py-1 rounded-full shrink-0 hover:bg-blue-50">
+                        ⚠️ ¿Glucosa en 250?
+                    </button>
+                    <button onclick="askQuickQuestion('Dame 3 snacks rápidos que no suban el azúcar')" class="bg-white border border-slate-200 text-navy text-[11px] font-semibold px-3 py-1 rounded-full shrink-0 hover:bg-blue-50">
+                        🥜 Snacks seguros
+                    </button>
+                </div>
+
+                <!-- Historial de mensajes -->
+                <div id="chat-messages-box" class="flex-1 overflow-y-auto p-4 space-y-3 bg-[#F8FAFC]">
+                    <div class="flex items-start gap-2 max-w-[88%]">
+                        <div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-xs text-xs leading-relaxed shadow-2xs">
+                            ¡Hola! Soy el asistente inteligente de <strong>Gluco Smart</strong>. Estoy disponible las 24 horas para resolver tus dudas sobre alimentos, lecturas de glucosa o recordatorios. ¿En qué te ayudo hoy?
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input de mensaje -->
+                <div class="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
+                    <input type="text" id="chat-user-input" placeholder="Escribe tu duda nutricional..." 
+                        class="flex-1 bg-slate-100 rounded-full px-4 py-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-navy"
+                        onkeypress="if(event.key==='Enter') sendAssistantMessage()">
+                    <button onclick="sendAssistantMessage()" class="w-10 h-10 rounded-full bg-navy hover:bg-navy-light text-white flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fas fa-paper-plane text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==========================================
+             MODAL 3: TARJETAS EDUCATIVAS Y SUPERMERCADO
+             ========================================== -->
+        <div id="info-modal" class="hidden absolute inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-fade">
+            <div class="bg-white w-full rounded-3xl p-5 shadow-2xl max-h-[80%] flex flex-col">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-3">
+                    <h3 id="info-modal-title" class="font-extrabold text-base text-navy">Guía Gluco Smart</h3>
+                    <button onclick="closeInfoModal()" class="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="info-modal-body" class="text-xs text-slate-700 space-y-2.5 overflow-y-auto leading-relaxed">
+                    <!-- Contenido dinámico -->
+                </div>
+                <button onclick="closeInfoModal()" class="mt-4 w-full bg-navy text-white font-bold py-2.5 rounded-xl text-xs">Entendido</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- LÓGICA JAVASCRIPT COMPLETA -->
+    <script>
+        const apiKey = ""; // Proporcionada por el entorno cuando está disponible
+
+        // Estado del usuario y medicamentos
+        let userProfile = {
+            age: 'Elena (45+)',
+            gender: 'Femenino',
+            condition: 'Prediabetes'
+        };
+
+        let currentOnboardingStep = 1;
+        let isFullViewport = false;
+
+        let medicationsList = [
+            { id: 1, name: 'Metformina 850 mg', time: '08:00', note: 'Con el desayuno', taken: true },
+            { id: 2, name: 'Losartán 50 mg', time: '14:30', note: 'Junto con la comida principal', taken: true },
+            { id: 3, name: 'Insulina Glargina / Metformina Nocturna', time: '21:00', note: 'Antes de dormir', taken: false }
+        ];
+
+        // Inicialización
+        window.addEventListener('DOMContentLoaded', () => {
+            renderMedications();
+        });
+
+        // ==========================================
+        // 1. NAVEGACIÓN ENTRE PESTAÑAS Y PANTALLA COMPLETA
+        // ==========================================
+        function switchTab(tab) {
+            const tabs = ['home', 'scanner', 'plan', 'safemode'];
+            tabs.forEach(t => {
+                const section = document.getElementById('view-' + t);
+                const btn = document.getElementById('nav-btn-' + t);
+                if (section) section.classList.add('hidden');
+                if (btn) {
+                    btn.className = 'flex-1 py-1.5 flex flex-col items-center text-slate-400 font-medium transition';
+                }
+            });
+
+            const activeSection = document.getElementById('view-' + tab);
+            const activeBtn = document.getElementById('nav-btn-' + tab);
+            if (activeSection) activeSection.classList.remove('hidden');
+
+            if (activeBtn) {
+                if (tab === 'safemode') {
+                    activeBtn.className = 'flex-1 py-1.5 flex flex-col items-center text-red-600 font-extrabold transition';
+                } else {
+                    activeBtn.className = 'flex-1 py-1.5 flex flex-col items-center text-navy font-extrabold transition';
+                }
+            }
+
+            const scrollBox = document.getElementById('main-scroll');
+            if (scrollBox) scrollBox.scrollTop = 0;
+        }
+
+        function toggleViewportMode() {
+            const shell = document.getElementById('app-shell');
+            const label = document.getElementById('viewport-label');
+            isFullViewport = !isFullViewport;
+            if (isFullViewport) {
+                shell.classList.remove('max-w-[430px]', 'md:h-[850px]', 'md:rounded-[42px]', 'md:border-[8px]');
+                shell.classList.add('max-w-3xl', 'md:h-[92vh]', 'md:rounded-3xl', 'md:border-4');
+                if (label) label.textContent = 'Modo Celular';
+            } else {
+                shell.classList.add('max-w-[430px]', 'md:h-[850px]', 'md:rounded-[42px]', 'md:border-[8px]');
+                shell.classList.remove('max-w-3xl', 'md:h-[92vh]', 'md:rounded-3xl', 'md:border-4');
+                if (label) label.textContent = 'Pantalla Completa';
+            }
+        }
+
+        // ==========================================
+        // 2. SIMULADOR DE GLUCÓMETRO EN VIVO Y LOGROS
+        // ==========================================
+        function updateGlucoseLevel(val) {
+            const glucose = parseInt(val, 10);
+            const slider = document.getElementById('glucose-slider');
+            if (slider && parseInt(slider.value, 10) !== glucose) {
+                slider.value = glucose;
+            }
+
+            document.getElementById('current-glucose-val').textContent = glucose;
+            document.getElementById('safemode-glucose-number').textContent = glucose;
+
+            const topBar = document.getElementById('glucose-top-bar');
+            const badge = document.getElementById('glucose-state-badge');
+            const msg = document.getElementById('glucose-state-msg');
+            const scoreRing = document.getElementById('score-badge-ring');
+            const scoreNum = document.getElementById('balance-score-num');
+            const donutPct = document.getElementById('donut-center-pct');
+            const donutRing = document.getElementById('main-donut-ring');
+
+            if (glucose >= 240) {
+                topBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-red-600';
+                badge.className = 'bg-red-100 text-red-700 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1';
+                badge.innerHTML = '<i class="fas fa-triangle-exclamation text-[10px]"></i> Hiperglucemia Crítica';
+                msg.textContent = '¡Nivel peligroso! Se recomienda activar protocolo Safe Mode.';
+                scoreRing.className = 'w-14 h-14 rounded-full border-4 border-red-500 flex flex-col items-center justify-center bg-red-50/50 shrink-0';
+                scoreNum.textContent = '42';
+                donutPct.textContent = '45%';
+                donutRing.setAttribute('stroke', '#EF4444');
+                donutRing.setAttribute('stroke-dashoffset', '159');
+            } else if (glucose > 140) {
+                topBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-amber-500';
+                badge.className = 'bg-amber-100 text-amber-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1';
+                badge.innerHTML = '<i class="fas fa-arrow-trend-up text-[10px]"></i> Ligeramente Alta';
+                msg.textContent = 'Bebe agua natural y camina 10-15 minutos.';
+                scoreRing.className = 'w-14 h-14 rounded-full border-4 border-amber-500 flex flex-col items-center justify-center bg-amber-50/50 shrink-0';
+                scoreNum.textContent = '68';
+                donutPct.textContent = '62%';
+                donutRing.setAttribute('stroke', '#F59E0B');
+                donutRing.setAttribute('stroke-dashoffset', '110');
+            } else if (glucose < 80) {
+                topBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-sky-500';
+                badge.className = 'bg-sky-100 text-sky-800 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1';
+                badge.innerHTML = '<i class="fas fa-arrow-down text-[10px]"></i> Glucosa Baja';
+                msg.textContent = 'Hipoglucemia leve: aplica regla de los 15g de carbohidratos.';
+                scoreRing.className = 'w-14 h-14 rounded-full border-4 border-sky-500 flex flex-col items-center justify-center bg-sky-50/50 shrink-0';
+                scoreNum.textContent = '60';
+                donutPct.textContent = '58%';
+                donutRing.setAttribute('stroke', '#0EA5E9');
+                donutRing.setAttribute('stroke-dashoffset', '121');
+            } else {
+                topBar.className = 'absolute top-0 left-0 right-0 h-1.5 bg-emerald-500';
+                badge.className = 'bg-emerald-100 text-emerald-700 text-xs font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1';
+                badge.innerHTML = '<i class="fas fa-check-circle text-[10px]"></i> Estable';
+                msg.textContent = 'Glucosa en nivel ideal ¡Buen trabajo!';
+                scoreRing.className = 'w-14 h-14 rounded-full border-4 border-emerald-500 flex flex-col items-center justify-center bg-emerald-50/50 shrink-0';
+                scoreNum.textContent = '83';
+                donutPct.textContent = '72%';
+                donutRing.setAttribute('stroke', '#059669');
+                donutRing.setAttribute('stroke-dashoffset', '81');
+            }
+        }
+
+        function simulateHighGlucoseCrisis() {
+            updateGlucoseLevel(279);
+            switchTab('safemode');
+            showToast('🚨 Alerta Crítica Detectada (279 mg/dL)', 'Safe Mode activado automáticamente. Tus contactos de emergencia están listos.', 'danger');
+        }
+
+        function deactivateSafeMode() {
+            updateGlucoseLevel(118);
+            switchTab('home');
+            showToast('Safe Mode Desactivado', 'Tu glucosa ha vuelto al rango estable (118 mg/dL).', 'success');
+        }
+
+        function updateAchievements() {
+            showToast('¡Progreso actualizado!', 'Tus hábitos saludables suman puntos a tu Balance Score.', 'success');
+        }
+
+        // ==========================================
+        // 3. FLUJO DE CUESTIONARIO INICIAL (ONBOARDING)
+        // ==========================================
+        function openOnboarding() {
+            currentOnboardingStep = 1;
+            renderOnboardingStep();
+            document.getElementById('onboarding-modal').classList.remove('hidden');
+        }
+
+        function closeOnboarding() {
+            document.getElementById('onboarding-modal').classList.add('hidden');
+        }
+
+        function renderOnboardingStep() {
+            for (let i = 1; i <= 4; i++) {
+                const el = document.getElementById('onb-step-' + i);
+                if (el) el.classList.add('hidden');
+            }
+            const active = document.getElementById('onb-step-' + currentOnboardingStep);
+            if (active) active.classList.remove('hidden');
+
+            const progress = document.getElementById('onb-progress-bar');
+            if (progress) progress.style.width = (currentOnboardingStep * 25) + '%';
+
+            const continueBtn = document.getElementById('onb-continue-btn');
+            if (continueBtn) {
+                continueBtn.textContent = currentOnboardingStep === 4 ? 'Finalizar y crear mi plan' : 'Continuar';
+            }
+        }
+
+        function nextOnboardingStep() {
+            if (currentOnboardingStep < 4) {
+                currentOnboardingStep++;
+                renderOnboardingStep();
+            } else {
+                finishOnboarding();
+            }
+        }
+
+        function prevOnboardingStep() {
+            if (currentOnboardingStep > 1) {
+                currentOnboardingStep--;
+                renderOnboardingStep();
+            } else {
+                closeOnboarding();
+            }
+        }
+
+        function selectOnbAge(ageLabel) {
+            userProfile.age = ageLabel;
+            nextOnboardingStep();
+        }
+
+        function selectOnbGender(genderLabel) {
+            userProfile.gender = genderLabel;
+            nextOnboardingStep();
+        }
+
+        function selectOnbCondition(condLabel) {
+            userProfile.condition = condLabel;
+            finishOnboarding();
+        }
+
+        function finishOnboarding() {
+            document.getElementById('profile-name-badge').textContent = userProfile.age;
+            document.getElementById('profile-cond-badge').textContent = userProfile.condition;
+            document.getElementById('profile-avatar-letter').textContent = userProfile.age.charAt(0).toUpperCase();
+            closeOnboarding();
+            showToast('¡Perfil Personalizado Listo!', `Plan ajustado para ${userProfile.age} (${userProfile.condition}).`, 'success');
+        }
+
+        // ==========================================
+        // 4. ESCÁNER VISUAL DE ALIMENTOS (PRESETS MEXICANOS + NOM-051 + IA REAL)
+        // ==========================================
+        const foodPresets = {
+            chocomilk: {
+                title: 'CHOCO MILK / NESQUIK EN POLVO',
+                score: '1/10',
+                status: 'danger',
+                seals: ['EXCESO CALORÍAS', 'EXCESO AZÚCARES'],
+                headline: 'Alerta en azúcar • Eleva rápido tu glucosa',
+                carbs: '75g de azúcar por 100g (Muy Alto)',
+                gi: 'Alto (85 IG)',
+                advice: 'Evita su consumo habitual. Dos cucharadas contienen casi 20g de azúcar refinada que genera un pico glucémico inmediato. Alternativa mexicana segura: Cacao natural 100% sin azúcar con leche de almendras y canela.'
+            },
+            soda: {
+                title: 'COCA-COLA / REFRESCO REGULAR 600ML',
+                score: '1/10',
+                status: 'danger',
+                seals: ['EXCESO CALORÍAS', 'EXCESO AZÚCARES', 'CONTIENE CAFEÍNA'],
+                headline: 'Alerta crítica de pico glucémico • 63g de azúcar',
+                carbs: '63g de azúcar líquida (12.5 cucharaditas)',
+                gi: 'Muy Alto (90 IG)',
+                advice: 'Los azúcares líquidos se absorben en menos de 15 minutos sin fibra que los frene, pudiendo disparar tu glucosa por encima de 240 mg/dL. Sustituye por agua mineral Peñafiel/Topo Chico con limón o agua de jamaica sin azúcar.'
+            },
+            pan: {
+                title: 'CONCHA / PAN DULCE TRADICIONAL',
+                score: '2/10',
+                status: 'danger',
+                seals: ['EXCESO CALORÍAS', 'EXCESO AZÚCARES', 'EXCESO GRASAS SATURADAS'],
+                headline: 'Alto en carbohidratos refinados y grasas',
+                carbs: '45g de carbohidratos por pieza',
+                gi: 'Alto (78 IG)',
+                advice: 'La combinación de harina blanca y costra de azúcar eleva fuertemente la glucosa. Si tienes mucho antojo, consume solo 1/4 de pieza acompañado de proteína (huevo o queso panela), nunca en ayunas.'
+            },
+            tacosnopal: {
+                title: 'TACOS DE POLLO O ASADA EN TORTILLA DE NOPAL CON AGUACATE',
+                score: '9/10',
+                status: 'safe',
+                seals: [],
+                headline: 'Excelente opción mexicana • Glucosa estable',
+                carbs: '9g de carbohidratos complejos ricos en fibra',
+                gi: 'Muy Bajo (20 IG)',
+                advice: '¡Platillo mexicano ideal! El mucílago (fibra soluble) de la tortilla de nopal junto con la proteína de la carne asada/pollo y la grasa saludable del aguacate frenan la absorción de glucosa y evitan picos posprandiales.'
+            }
+        };
+
+        function runPresetScan(key) {
+            const item = foodPresets[key];
+            if (!item) return;
+            document.getElementById('scan-food-thumb').classList.add('hidden');
+            renderScannerCard(item);
+        }
+
+        function renderScannerCard(data) {
+            const card = document.getElementById('scan-result-card');
+            const scoreBar = document.getElementById('scan-score-bar');
+            const catTag = document.getElementById('scan-category-tag');
+            const headline = document.getElementById('scan-alert-headline');
+            const icon = document.getElementById('scan-alert-icon');
+            const giVal = document.getElementById('scan-gi-val');
+            const adviceBox = document.getElementById('scan-advice-box');
+            const sealsBox = document.getElementById('nom-seals-container');
+
+            document.getElementById('scan-food-title').textContent = data.title;
+            scoreBar.textContent = data.score;
+            headline.textContent = data.headline;
+            document.getElementById('scan-carbs-val').textContent = data.carbs;
+            giVal.textContent = data.gi;
+            document.getElementById('scan-advice-text').textContent = data.advice;
+
+            // Renderizar sellos NOM-051
+            sealsBox.innerHTML = '';
+            const sealsList = data.seals || (data.status === 'danger' ? ['EXCESO CALORÍAS', 'EXCESO AZÚCARES'] : (data.status === 'warning' ? ['EXCESO CALORÍAS'] : []));
+            if (sealsList.length > 0) {
+                sealsList.forEach(s => {
+                    const badge = document.createElement('span');
+                    badge.className = 'bg-slate-950 text-white text-[9px] font-extrabold uppercase px-2.5 py-1 rounded-md border border-slate-600 tracking-wider';
+                    badge.textContent = '⬢ ' + s;
+                    sealsBox.appendChild(badge);
+                });
+            } else {
+                const safeBadge = document.createElement('span');
+                safeBadge.className = 'bg-emerald-100 text-emerald-800 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md border border-emerald-300';
+                safeBadge.innerHTML = '<i class="fas fa-check-circle mr-1"></i> Libre de Sellos de Advertencia (NOM-051)';
+                sealsBox.appendChild(safeBadge);
+            }
+
+            if (data.status === 'danger') {
+                card.className = 'bg-white rounded-3xl p-5 shadow-md border-2 border-red-500 animate-fade';
+                scoreBar.className = 'w-full bg-red-600 text-white font-black text-lg py-2 px-4 rounded-xl text-center shadow-sm mb-2.5';
+                catTag.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-red-100 text-red-700';
+                headline.className = 'font-extrabold text-sm text-red-700';
+                icon.className = 'fas fa-triangle-exclamation text-red-600 text-lg';
+                giVal.className = 'font-extrabold text-red-600';
+                adviceBox.className = 'bg-red-50 border border-red-200 rounded-2xl p-3.5 text-xs text-red-950 leading-relaxed';
+            } else if (data.status === 'warning') {
+                card.className = 'bg-white rounded-3xl p-5 shadow-md border-2 border-amber-500 animate-fade';
+                scoreBar.className = 'w-full bg-amber-500 text-white font-black text-lg py-2 px-4 rounded-xl text-center shadow-sm mb-2.5';
+                catTag.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800';
+                headline.className = 'font-extrabold text-sm text-amber-700';
+                icon.className = 'fas fa-circle-exclamation text-amber-500 text-lg';
+                giVal.className = 'font-extrabold text-amber-600';
+                adviceBox.className = 'bg-amber-50 border border-amber-200 rounded-2xl p-3.5 text-xs text-amber-950 leading-relaxed';
+            } else {
+                card.className = 'bg-white rounded-3xl p-5 shadow-md border-2 border-emerald-500 animate-fade';
+                scoreBar.className = 'w-full bg-emerald-600 text-white font-black text-lg py-2 px-4 rounded-xl text-center shadow-sm mb-2.5';
+                catTag.className = 'text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800';
+                headline.className = 'font-extrabold text-sm text-emerald-700';
+                icon.className = 'fas fa-circle-check text-emerald-600 text-lg';
+                giVal.className = 'font-extrabold text-emerald-600';
+                adviceBox.className = 'bg-emerald-50 border border-emerald-200 rounded-2xl p-3.5 text-xs text-emerald-950 leading-relaxed';
+            }
+        }
+
+        async function handleRealPhotoScan(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const thumb = document.getElementById('scan-food-thumb');
+            thumb.src = URL.createObjectURL(file);
+            thumb.classList.remove('hidden');
+
+            document.getElementById('scan-loading-box').classList.remove('hidden');
+            document.getElementById('scan-result-card').classList.add('hidden');
+
+            try {
+                const base64Data = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result.split(',')[1]);
+                    reader.onerror = err => reject(err);
+                });
+
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [
+                            { text: "Analiza esta foto de alimento para un paciente con diabetes o glucosa alta. Devuelve JSON con: title (nombre del alimento), score (ej. '2/10' o '8/10'), status ('danger', 'warning' o 'safe'), headline (frase corta de impacto glucémico), carbs (estimación de carbohidratos), gi (índice glucémico) y advice (recomendación práctica)." },
+                            { inlineData: { mimeType: file.type, data: base64Data } }
+                        ]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING" },
+                                score: { type: "STRING" },
+                                status: { type: "STRING" },
+                                headline: { type: "STRING" },
+                                carbs: { type: "STRING" },
+                                gi: { type: "STRING" },
+                                advice: { type: "STRING" }
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("Fallback demo");
+                const result = await response.json();
+                const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+                document.getElementById('scan-loading-box').classList.add('hidden');
+                document.getElementById('scan-result-card').classList.remove('hidden');
+                renderScannerCard(parsed);
+
+            } catch (e) {
+                // Fallback a prueba de fallos para la presentación en clase
+                setTimeout(() => {
+                    document.getElementById('scan-loading-box').classList.add('hidden');
+                    document.getElementById('scan-result-card').classList.remove('hidden');
+                    renderScannerCard({
+                        title: 'ALIMENTO CAPTURADO EN CÁMARA',
+                        score: '3/10',
+                        status: 'danger',
+                        headline: 'Alerta en carbohidratos de rápida absorción',
+                        carbs: 'Aprox. 42g por porción',
+                        gi: 'Alto (78 IG)',
+                        advice: 'Detectamos azúcares añadidos o harinas refinadas. Para evitar un pico de glucosa, reduce la porción a la mitad o acompáñalo con fibra y proteína.'
+                    });
+                }, 1200);
+            }
+        }
+
+        async function analyzeManualFood() {
+            const query = document.getElementById('manual-food-input').value.trim();
+            if (!query) return;
+
+            document.getElementById('scan-food-thumb').classList.add('hidden');
+            document.getElementById('scan-loading-box').classList.remove('hidden');
+            document.getElementById('scan-result-card').classList.add('hidden');
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: `Evalúa el alimento "${query}" para una persona con diabetes. Responde estrictamente en JSON con: title, score (del 1/10 al 10/10), status ('danger', 'warning' o 'safe'), headline, carbs, gi, advice.` }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                title: { type: "STRING" },
+                                score: { type: "STRING" },
+                                status: { type: "STRING" },
+                                headline: { type: "STRING" },
+                                carbs: { type: "STRING" },
+                                gi: { type: "STRING" },
+                                advice: { type: "STRING" }
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error("Fallback manual");
+                const result = await response.json();
+                const parsed = JSON.parse(result.candidates[0].content.parts[0].text);
+
+                document.getElementById('scan-loading-box').classList.add('hidden');
+                document.getElementById('scan-result-card').classList.remove('hidden');
+                renderScannerCard(parsed);
+            } catch (err) {
+                const lower = query.toLowerCase();
+                const isHealthy = lower.includes('ensalada') || lower.includes('pollo') || lower.includes('aguacate') || lower.includes('nopal') || lower.includes('pescado') || lower.includes('agua') || lower.includes('nueces');
+                setTimeout(() => {
+                    document.getElementById('scan-loading-box').classList.add('hidden');
+                    document.getElementById('scan-result-card').classList.remove('hidden');
+                    renderScannerCard({
+                        title: query.toUpperCase(),
+                        score: isHealthy ? '9/10' : '2/10',
+                        status: isHealthy ? 'safe' : 'danger',
+                        headline: isHealthy ? 'Alimento seguro • Bajo impacto glucémico' : 'Alerta en carbohidratos • Moderar porción',
+                        carbs: isHealthy ? '8g de carbohidratos complejos' : '48g de carbohidratos estimados',
+                        gi: isHealthy ? 'Bajo (25 IG)' : 'Alto (79 IG)',
+                        advice: isHealthy
+                            ? `Excelente opción para tu plan diario. "${query}" aporta nutrientes sin elevar bruscamente la glucosa.`
+                            : `"${query}" puede elevar rápidamente tu nivel de azúcar si se consume solo. Combínalo con verdura o prefiere una versión sin azúcar añadida.`
+                    });
+                }, 900);
+            }
+        }
+
+        // ==========================================
+        // 5. RECORDATORIOS DE MEDICAMENTOS Y GENERADOR DE PLAN
+        // ==========================================
+        function renderMedications() {
+            const container = document.getElementById('meds-container');
+            container.innerHTML = '';
+
+            let takenCount = 0;
+            medicationsList.forEach(med => {
+                if (med.taken) takenCount++;
+                const row = document.createElement('div');
+                row.className = `p-3 rounded-2xl border flex items-center justify-between transition ${med.taken ? 'bg-emerald-50/50 border-emerald-200' : 'bg-slate-50 border-slate-200'}`;
+                row.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleMedStatus(${med.id})" class="w-9 h-9 rounded-xl flex items-center justify-center font-bold transition ${med.taken ? 'bg-emerald-600 text-white' : 'bg-white border-2 border-slate-300 text-transparent'}">
+                            <i class="fas fa-check text-xs"></i>
+                        </button>
+                        <div>
+                            <p class="font-extrabold text-xs ${med.taken ? 'line-through text-slate-400' : 'text-slate-800'}">${med.name}</p>
+                            <p class="text-[11px] text-slate-500"><i class="far fa-clock text-navy mr-1"></i>${med.time} • ${med.note}</p>
+                        </div>
+                    </div>
+                    <button onclick="deleteMed(${med.id})" class="text-slate-300 hover:text-red-500 p-1.5 text-xs">
+                        <i class="fas fa-trash-can"></i>
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+
+            document.getElementById('meds-progress-text').textContent = `${takenCount} de ${medicationsList.length} tomas completadas hoy`;
+        }
+
+        function toggleMedStatus(id) {
+            const item = medicationsList.find(m => m.id === id);
+            if (item) {
+                item.taken = !item.taken;
+                renderMedications();
+                if (item.taken) {
+                    showToast('¡Medicamento registrado!', `Has marcado "${item.name}" como tomado.`, 'success');
+                }
+            }
+        }
+
+        function deleteMed(id) {
+            medicationsList = medicationsList.filter(m => m.id !== id);
+            renderMedications();
+        }
+
+        function toggleNewMedForm() {
+            document.getElementById('new-med-form').classList.toggle('hidden');
+        }
+
+        function saveNewMedication() {
+            const name = document.getElementById('input-med-name').value.trim();
+            const time = document.getElementById('input-med-time').value || '08:00';
+            const note = document.getElementById('input-med-note').value.trim() || 'Dosis programada';
+            if (!name) return;
+
+            medicationsList.push({
+                id: Date.now(),
+                name,
+                time,
+                note,
+                taken: false
+            });
+            document.getElementById('input-med-name').value = '';
+            document.getElementById('input-med-note').value = '';
+            document.getElementById('new-med-form').classList.add('hidden');
+            renderMedications();
+            showToast('Recordatorio guardado', `Te avisaremos a las ${time} para tomar ${name}.`, 'success');
+        }
+
+        function simulatePillAlarm() {
+            showToast('⏰ Recordatorio de Medicamento (21:00)', 'Es hora de tu toma: Metformina 850mg / Insulina. No olvides registrarla.', 'warning');
+        }
+
+        async function generateCustomPlanWithAI() {
+            const cond = document.getElementById('plan-cond-select').value;
+            const goal = document.getElementById('plan-goal-select').value;
+            const allergy = document.getElementById('plan-allergy-input').value.trim() || 'Ninguna';
+
+            document.getElementById('plan-loading-spinner').classList.remove('hidden');
+            document.getElementById('plan-cards-output').classList.add('opacity-40');
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: `Diseña un menú mexicano saludable de 1 día para un paciente en Zapopan con ${cond}, cuyo objetivo es "${goal}" y restricciones: "${allergy}". Responde en JSON con: breakfast, lunch, dinner, snack.` }]
+                    }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                breakfast: { type: "STRING" },
+                                lunch: { type: "STRING" },
+                                dinner: { type: "STRING" },
+                                snack: { type: "STRING" }
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error("Fallback plan");
+                const data = await response.json();
+                const plan = JSON.parse(data.candidates[0].content.parts[0].text);
+
+                document.getElementById('menu-breakfast').textContent = plan.breakfast;
+                document.getElementById('menu-lunch').textContent = plan.lunch;
+                document.getElementById('menu-dinner').textContent = plan.dinner;
+                document.getElementById('menu-snack').textContent = plan.snack;
+            } catch (e) {
+                // Alternativa instantánea para que siempre cambie en la demo
+                document.getElementById('menu-breakfast').textContent = `Omelette de claras con espinacas, champiñones y queso panela, acompañado de media taza de frijoles de la olla y té verde sin azúcar (${cond}).`;
+                document.getElementById('menu-lunch').textContent = `Fajitas de res o pollo asadas con pimientos y cebolla, ensalada fresca con aguacate y 1 tostada horneada de maíz. Agua de jamaica natural sin azúcar.`;
+                document.getElementById('menu-dinner').textContent = `Calabacitas rellenas de atún o requesón al vapor con ensalada de lechuga y semillas de girasol.`;
+                document.getElementById('menu-snack').textContent = `1 taza de jícama y pepino con limón + 8 nueces mitades. Hidratación recomendada: 2.5 litros de agua.`;
+            } finally {
+                document.getElementById('plan-loading-spinner').classList.add('hidden');
+                document.getElementById('plan-cards-output').classList.remove('opacity-40');
+                showToast('¡Plan Nutricional Actualizado!', 'Menú personalizado generado con bajo índice glucémico.', 'success');
+            }
+        }
+
+        // ==========================================
+        // 6. SAFE MODE: LLAMADA, WHATSAPP Y GPS ZAPOPAN
+        // ==========================================
+        function callEmergencyContact() {
+            const phone = document.getElementById('emergency-phone-1').value.trim();
+            showToast('Iniciando llamada de emergencia...', `Marcando a Mamá / Familiar (${phone})`, 'danger');
+            window.location.href = 'tel:' + phone.replace(/\s+/g, '');
+        }
+
+        function sendWhatsAppEmergency() {
+            const currentGluc = document.getElementById('safemode-glucose-number').textContent;
+            const brotherPhone = document.getElementById('emergency-phone-2').value.replace(/\D/g, '') || '523387654321';
+            const text = `🚨 *ALERTA SAFE MODE - GLUCO SMART* 🚨\nHola Carlos, mi nivel de glucosa actual es de *${currentGluc} mg/dL* (Nivel Alto) y necesito atención.\n📍 Ubicación actual: Zapopan, Jalisco (https://maps.google.com/?q=20.7214,-103.3891)\nPor favor comunícate conmigo.`;
+            window.open(`https://wa.me/${brotherPhone}?text=` + encodeURIComponent(text), '_blank');
+        }
+
+        function shareLiveLocationZapopan() {
+            const btnText = document.getElementById('gps-btn-text');
+            btnText.textContent = 'Ubicación enviada: Av. Vallarta / Zapopan Centro ✓';
+            showToast('📍 Ubicación GPS Compartida', 'Coordenadas (20.7214° N, 103.3891° O - Zapopan, Jal.) listas para Mamá y Carlos.', 'success');
+        }
+
+        // ==========================================
+        // 7. ASISTENTE IA 24/7 (NUTRIBOT EN VIVO)
+        // ==========================================
+        function toggleChatDrawer() {
+            const drawer = document.getElementById('chat-drawer');
+            drawer.classList.toggle('hidden');
+        }
+
+        function askQuickQuestion(q) {
+            const input = document.getElementById('chat-user-input');
+            input.value = q;
+            sendAssistantMessage();
+        }
+
+        async function sendAssistantMessage() {
+            const input = document.getElementById('chat-user-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            const box = document.getElementById('chat-messages-box');
+
+            // Mensaje del usuario
+            const userRow = document.createElement('div');
+            userRow.className = 'flex justify-end';
+            userRow.innerHTML = `<div class="bg-navy text-white p-3 rounded-2xl rounded-tr-xs text-xs leading-relaxed max-w-[85%] shadow-xs">${text}</div>`;
+            box.appendChild(userRow);
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+
+            // Indicador escribiendo
+            const loadingRow = document.createElement('div');
+            loadingRow.className = 'flex items-start gap-2 max-w-[88%]';
+            loadingRow.innerHTML = `<div class="bg-white border border-slate-200 text-slate-500 p-3 rounded-2xl rounded-tl-xs text-xs italic">Analizando consulta nutricional...</div>`;
+            box.appendChild(loadingRow);
+            box.scrollTop = box.scrollHeight;
+
+            try {
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+                const payload = {
+                    contents: [{
+                        role: "user",
+                        parts: [{ text: `Eres el Asistente IA 24/7 de Gluco Smart en México (Zapopan). Responde de forma cálida, breve (máximo 3 oraciones) y con ejemplos de comida mexicana la siguiente duda de un paciente con diabetes o prediabetes: "${text}"` }]
+                    }]
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (!response.ok) throw new Error("Fallback chat");
+                const data = await response.json();
+                const reply = data.candidates[0].content.parts[0].text;
+
+                loadingRow.innerHTML = `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-xs text-xs leading-relaxed shadow-2xs">${reply}</div>`;
+            } catch (err) {
+                let fallbackReply = 'Para mantener tu glucosa en equilibrio, combina siempre tus alimentos con fibra (como nopales o ensalada verde) y proteína (pollo, huevo o queso panela). Si tu glucosa supera los 240 mg/dL, hidrátate y activa el Safe Mode.';
+                const qLower = text.toLowerCase();
+                if (qLower.includes('fruta') || qLower.includes('manzana') || qLower.includes('noche')) {
+                    fallbackReply = 'Por la noche es mejor elegir media manzana verde con cáscara o unas fresas acompañadas de 8 almendras. Evita el plátano maduro o jugos antes de dormir para prevenir picos nocturnos.';
+                } else if (qLower.includes('250') || qLower.includes('alta') || qLower.includes('subi')) {
+                    fallbackReply = 'Si tu glucosa subió a 250 mg/dL: 1) Bebe 2 vasos de agua natural, 2) Evita cualquier carbohidrato ahora, 3) Sigue la pauta de tu médico y usa la pestaña Safe Mode si sientes mareo o malestar.';
+                } else if (qLower.includes('snack') || qLower.includes('colaci')) {
+                    fallbackReply = '3 snacks mexicanos seguros que no suben el azúcar: 1) Jícama y pepino con limón, 2) Rollitos de pechuga de pavo con queso panela y aguacate, 3) Un puñado de nueces o cacahuates naturales.';
+                }
+                setTimeout(() => {
+                    loadingRow.innerHTML = `<div class="bg-white border border-slate-200 text-slate-800 p-3 rounded-2xl rounded-tl-xs text-xs leading-relaxed shadow-2xs">${fallbackReply}</div>`;
+                    box.scrollTop = box.scrollHeight;
+                }, 600);
+            }
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // ==========================================
+        // 8. MODALES INFORMATIVOS (DIABETES BASICS, SUPERMERCADO EN MÉXICO, RESTAURANTES EN ZAPOPAN)
+        // ==========================================
+        const infoContents = {
+            basics: {
+                title: 'Diabetes Basics • Rangos Ideales',
+                html: `<p><strong>• En ayunas:</strong> Entre 80 y 130 mg/dL se considera un rango seguro para la mayoría de los pacientes.</p>
+                       <p><strong>• 2 horas después de comer:</strong> Menos de 180 mg/dL indica una buena respuesta posprandial.</p>
+                       <p><strong>• ¿Por qué usar Gluco Smart?:</strong> Pequeños cambios diarios evitan picos de azúcar y protegen tu vista, riñones y energía diaria.</p>`
+            },
+            nutritips: {
+                title: 'NutriTips • El Orden de los Alimentos Importa',
+                html: `<p>Comer tus alimentos en este orden reduce hasta un <strong>40% el pico de glucosa</strong> después de comer:</p>
+                       <p>1️⃣ <strong>Primero la fibra:</strong> Ensalada verde, nopales asados, brócoli o pepino con limón.</p>
+                       <p>2️⃣ <strong>Segundo la proteína y grasas buenas:</strong> Pollo, pescado, huevo, carne asada, queso panela o aguacate.</p>
+                       <p>3️⃣ <strong>Al final los carbohidratos:</strong> Tortilla de maíz nixtamalizado o frijoles de la olla.</p>`
+            },
+            control: {
+                title: 'Control del Azúcar • Regla de Oro',
+                html: `<p><strong>Camina 10 a 15 minutos después de tu comida principal:</strong> Tus músculos utilizan la glucosa circulante como energía inmediata sin requerir grandes cantidades de insulina.</p>
+                       <p><strong>Cuida el descanso:</strong> Dormir menos de 6 horas aumenta la resistencia a la insulina al día siguiente.</p>`
+            },
+            supermarket: {
+                title: '🛒 Lista Saludable Mexicana Gluco Smart',
+                html: `<p class="font-bold text-emerald-700">Alimentos Verdes sin sellos NOM-051 (Siempre en tu despensa):</p>
+                       <ul class="list-disc pl-4 space-y-1">
+                           <li><strong>Verduras mexicanas:</strong> Nopales, espinacas, calabacitas, chayote, jícama, pepino y tomate.</li>
+                           <li><strong>Proteínas magras:</strong> Pechuga de pollo, bistec de res magro, atún en agua, huevo, queso panela y requesón.</li>
+                           <li><strong>Grasas saludables:</strong> Aguacate Hass, semillas de chía, almendras, nueces y cacahuates naturales.</li>
+                           <li><strong>Carbohidratos de bajo IG:</strong> Frijoles de la olla, lentejas, tortillas de nopal o maíz nixtamalizado.</li>
+                       </ul>`
+            },
+            'super-walmart': {
+                title: '🛒 Qué comprar en Walmart / Bodega Aurrera',
+                html: `<p><strong>Opciones recomendadas y accesibles:</strong></p>
+                       <ul class="list-disc pl-4 space-y-1">
+                           <li>Paquete de tortillas de nopal o maíz azul sin conservadores (0 sellos).</li>
+                           <li>Queso Panela reducido en grasa y yogurt griego natural sin azúcar añadida.</li>
+                           <li>Bolsa de semillas de chía, linaza y avena entera en hojuelas.</li>
+                           <li>Atún en lata en agua (evitar versiones con mayonesa o elote dulce).</li>
+                       </ul>`
+            },
+            'super-soriana': {
+                title: '🏬 Qué comprar en Soriana / Fresko',
+                html: `<p><strong>Selección fresca para control glucémico:</strong></p>
+                       <ul class="list-disc pl-4 space-y-1">
+                           <li>Charola de nopales limpios listos para asar y ensaladas lavadas.</li>
+                           <li>Pechuga de pollo o filete de pescado blanco (tilapia/huachinango).</li>
+                           <li>Leche de almendras sin azúcar (verificar que diga "Sin Azúcar" en el frente).</li>
+                           <li>Cacao 100% natural sin azúcar para sustituir el Choco Milk.</li>
+                       </ul>`
+            },
+            'super-tianguis': {
+                title: '🥑 Qué comprar en el Tianguis / Mercado Local',
+                html: `<p><strong>Lo mejor de los mercados de Zapopan a bajo costo:</strong></p>
+                       <ul class="list-disc pl-4 space-y-1">
+                           <li>Aguacate Hass fresco, limones, jícama y pepino para colaciones.</li>
+                           <li>Requesón fresco de rancho y queso panela artesanal.</li>
+                           <li>Frijol peruano o pinto para cocer en olla (evita los frijoles refritos de lata con manteca).</li>
+                           <li>Flor de jamaica natural para preparar agua fresca sin azúcar.</li>
+                       </ul>`
+            },
+            'rest-taqueria': {
+                title: '🌮 Taquería Local en Zapopan • Qué pedir',
+                html: `<p><strong>✅ Qué pedir:</strong> 2 a 3 tacos de carne asada, bistec o pollo en <strong>tortilla de nopal</strong> (o con una sola tortilla de maíz en vez de copia/doble), abundante cilantro, cebolla, salsa casera y guacamole/aguacate.</p>
+                       <p><strong>❌ Qué evitar:</strong> Carnes caramelizadas o grasosas (suadero frito en exceso), aguas de horchata con jarabe y refrescos azucarados. Pide agua mineral con limón.</p>`
+            },
+            'rest-vips': {
+                title: '🍽️ Vips / Toks • Qué pedir sin subir tu azúcar',
+                html: `<p><strong>✅ Qué pedir:</strong> Pechuga asada con nopales y panela, o <strong>enchiladas suizas</strong> pidiendo cambiar las papas o arroz por ensalada verde fresca. De tomar: limonada o naranjada mineral sin azúcar.</p>
+                       <p><strong>❌ Qué evitar:</strong> La canasta de pan dulce inicial, jugos de frutas grandes en ayunas y postres con helado.</p>`
+            },
+            'rest-fast': {
+                title: '🍔 McDonald\'s / Comida Rápida • Qué pedir',
+                html: `<p><strong>✅ Qué pedir:</strong> Hamburguesa sencilla con queso (puedes retirar la tapa superior del pan para reducir a la mitad las harinas), ensalada lateral si está disponible y agua natural o refresco sin azúcar.</p>
+                       <p><strong>❌ Qué evitar:</strong> Combos grandes con papas fritas (altísimo índice glucémico) y malteadas o McFlurry.</p>`
+            }
+        };
+
+        function openInfoModal(key) {
+            const item = infoContents[key];
+            if (!item) return;
+            document.getElementById('info-modal-title').textContent = item.title;
+            document.getElementById('info-modal-body').innerHTML = item.html;
+            document.getElementById('info-modal').classList.remove('hidden');
+        }
+
+        function closeInfoModal() {
+            document.getElementById('info-modal').classList.add('hidden');
+        }
+
+        // ==========================================
+        // 9. SISTEMA DE NOTIFICACIONES INTERNAS (TOAST)
+        // ==========================================
+        let toastTimeout;
+        function showToast(title, desc, type = 'success') {
+            const toast = document.getElementById('app-toast');
+            const iconBox = document.getElementById('toast-icon');
+            document.getElementById('toast-title').textContent = title;
+            document.getElementById('toast-desc').textContent = desc;
+
+            if (type === 'danger') {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center shrink-0 text-lg mt-0.5';
+                iconBox.innerHTML = '<i class="fas fa-triangle-exclamation"></i>';
+            } else if (type === 'warning') {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0 text-lg mt-0.5';
+                iconBox.innerHTML = '<i class="fas fa-bell"></i>';
+            } else {
+                iconBox.className = 'w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-lg mt-0.5';
+                iconBox.innerHTML = '<i class="fas fa-check-circle"></i>';
+            }
+
+            toast.classList.remove('hidden');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 4200);
+        }
+
+        function hideToast() {
+            document.getElementById('app-toast').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
